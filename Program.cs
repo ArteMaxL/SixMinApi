@@ -1,7 +1,20 @@
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using SixMinApi.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var sqlConnBuilder = new SqlConnectionStringBuilder
+{
+    ConnectionString = builder.Configuration.GetConnectionString("SqlDbConnection"),
+    UserID = builder.Configuration["UserId"],
+    Password = builder.Configuration["Password"]
+};
+
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(sqlConnBuilder.ConnectionString));
 
 var app = builder.Build();
 
