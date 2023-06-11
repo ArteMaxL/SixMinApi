@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SixMinApi;
 using SixMinApi.Data;
 using SixMinApi.Dtos;
+using SixMinApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,45 @@ app.MapGet("api/v1/commands/{id}", async (ICommandRepo repo, IMapper mapper, int
         return Results.Ok(mapper.Map<CommandReadDto>(command));
     }
     return Results.NotFound();
+});
+
+app.MapPost("api/v1/commands", async (ICommandRepo repo, IMapper mapper, CommandCreateDto cmdCreateDto) => {
+    var commandModel = mapper.Map<Command>(cmdCreateDto);
+
+    await repo.CreateCommand(commandModel);
+    await repo.SaveChanges();
+
+    var cmdReadDto = mapper.Map<CommandReadDto>(commandModel);
+
+    return Results.Created($"api/v1/commands/{cmdReadDto.Id}", cmdReadDto);
+ });
+
+app.MapPut("api/v1/commands/{id}", async (ICommandRepo repo, IMapper mapper, int id, CommandUpdateDto cmdUpdateDto) => {
+    var command = await repo.GetCommandById(id);
+    if ( command == null)
+    {
+        return Results.NotFound();
+    }
+
+    mapper.Map(cmdUpdateDto, command);
+
+    await repo.SaveChanges();
+
+    return Results.NoContent();
+});
+
+app.MapDelete("api/v1/commands/{id}", async (ICommandRepo repo, IMapper mapper, int id) => {
+     var command = await repo.GetCommandById(id);
+    if ( command == null)
+    {
+        return Results.NotFound();
+    }
+
+    repo.DeleteCommand(command);
+
+    await repo.SaveChanges();
+
+    return Results.NoContent();
 });
 
 app.Run();
