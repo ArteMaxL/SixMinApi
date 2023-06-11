@@ -1,7 +1,9 @@
+using AutoMapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SixMinApi;
 using SixMinApi.Data;
+using SixMinApi.Dtos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,5 +30,19 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapGet("api/v1/commands", async (ICommandRepo repo, IMapper mapper) => {
+    var commands = await repo.GetAllCommands();
+    return Results.Ok(mapper.Map<IEnumerable<CommandReadDto>>(commands));
+});
+
+app.MapGet("api/v1/commands/{id}", async (ICommandRepo repo, IMapper mapper, int id) => {
+    var command = await repo.GetCommandById(id);
+    if ( command != null)
+    {
+        return Results.Ok(mapper.Map<CommandReadDto>(command));
+    }
+    return Results.NotFound();
+});
 
 app.Run();
